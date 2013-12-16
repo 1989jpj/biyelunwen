@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>基于HTML5的工业实时监控系统</title>
+<script type="text/javascript"
+	src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<script src="js/highcharts.js"></script>
+<script src="js/modules/exporting.js"></script>
+<script type="text/javascript">
+	jQuery.noConflict();
+</script>
+<script type="text/javascript">
+<!--原来的脚本，数据不能显示-->
+
+	(function($) {
+		$(function() {
+
+			Highcharts.setOptions({
+				global : {
+					useUTC : false
+				}
+			});
+
+			$(document)
+					.ready(
+							function() {
+
+								var chart;
+
+								chart = new Highcharts.Chart(
+										{
+											chart : {
+												renderTo : 'container',
+												animation : Highcharts.svg,
+												type : 'spline',
+												marginRight : 10,
+												events : {
+													load : function() {
+														var series = this.series[0];
+														var socket = new WebSocket(
+																"ws://localhost:8080/Ws2/WsServlet");
+														socket.onmessage = function(
+																evt) {
+															var x = (new Date())
+																	.getTime();
+															var y = parseFloat(evt.data);
+															series.addPoint([
+																	x, y ],
+																	true, true);
+														}
+													}
+												}
+											},
+											title : {
+												text : '工业现场实时数据监控'
+											},
+											xAxis : {
+												type : 'datetime',
+												tickPixelInterval : 150
+											},
+											yAxis : {
+												title : {
+													text : 'Value'
+												},
+												plotLines : [ {
+													value : 0,
+													width : 1,
+													color : '#808080'
+												} ]
+											},
+											tooltip : {
+												formatter : function() {
+													return '<b>'
+															+ this.series.name
+															+ '</b><br/>'
+															+ Highcharts
+																	.dateFormat(
+																			'%Y-%m-%d %H:%M:%S',
+																			this.x)
+															+ '<br/>'
+															+ Highcharts
+																	.numberFormat(
+																			this.y,
+																			2);
+												}
+											},
+											legend : {
+												enabled : false
+											},
+											exporting : {
+												enabled : false
+											},
+											series : [ {
+												name : 'Realtime Data',
+												data : (function() {
+													var data = [], time = (new Date())
+															.getTime(), i;
+
+													for (i = -60; i <= 0; i++) {
+														data
+																.push({
+																	x : time
+																			+ i
+																			* 1000,
+																	y : 0
+																});
+													}
+													return data;
+												})()
+											} ]
+										});
+
+							});
+
+		});
+	})(jQuery);
+	<!---->
+</script>
+</head>
+<body>
+	<div id="container"
+		style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+
+</body>
+</html>
